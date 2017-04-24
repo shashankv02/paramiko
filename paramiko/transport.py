@@ -55,6 +55,9 @@ from paramiko.dsskey import DSSKey
 from paramiko.kex_gex import KexGex, KexGexSHA256
 from paramiko.kex_group1 import KexGroup1
 from paramiko.kex_group14 import KexGroup14
+from paramiko.kex_nistp256 import KexNistp256
+from paramiko.kex_nistp384 import KexNistp384
+from paramiko.kex_nistp521 import KexNistp521
 from paramiko.kex_gss import KexGSSGex, KexGSSGroup1, KexGSSGroup14, NullHostKey
 from paramiko.message import Message
 from paramiko.packet import Packetizer, NeedRekeyException
@@ -124,6 +127,9 @@ class Transport (threading.Thread, ClosingContextManager):
         'ssh-dss',
     ) + tuple(ECDSAKey.supported_key_format_identifiers())
     _preferred_kex =  (
+        'ecdh-sha2-nistp256',
+        'ecdh-sha2-nistp384',
+        'ecdh-sha2-nistp521',
         'diffie-hellman-group1-sha1',
         'diffie-hellman-group14-sha1',
         'diffie-hellman-group-exchange-sha1',
@@ -211,6 +217,9 @@ class Transport (threading.Thread, ClosingContextManager):
     }
 
     _kex_info = {
+        'ecdh-sha2-nistp256': KexNistp256,
+        'ecdh-sha2-nistp384': KexNistp384,
+        'ecdh-sha2-nistp521': KexNistp521,
         'diffie-hellman-group1-sha1': KexGroup1,
         'diffie-hellman-group14-sha1': KexGroup14,
         'diffie-hellman-group-exchange-sha1': KexGex,
