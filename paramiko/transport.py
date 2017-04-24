@@ -127,13 +127,13 @@ class Transport (threading.Thread, ClosingContextManager):
         'ssh-dss',
     ) + tuple(ECDSAKey.supported_key_format_identifiers())
     _preferred_kex =  (
-        'ecdh-sha2-nistp256',
-        'ecdh-sha2-nistp384',
-        'ecdh-sha2-nistp521',
         'diffie-hellman-group1-sha1',
         'diffie-hellman-group14-sha1',
         'diffie-hellman-group-exchange-sha1',
         'diffie-hellman-group-exchange-sha256',
+        'ecdh-sha2-nistp256',
+        'ecdh-sha2-nistp384',
+        'ecdh-sha2-nistp521'
     )
     _preferred_compression = ('none',)
 
