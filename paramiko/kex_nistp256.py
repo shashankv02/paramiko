@@ -9,7 +9,6 @@ from paramiko.py3compat import byte_chr, long
 from paramiko.ssh_exception import SSHException
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicNumbers
 
 
 _MSG_KEXECDH_INIT, _MSG_KEXECDH_REPLY = range(30, 32)
@@ -57,40 +56,38 @@ class KexNistp256():
 
     def _parse_kexecdh_init(self, m):
         Q_C_bytes = m.get_string()
-        #SEC1: V2.0  2.3.4 Octet-String-to-Elliptic-Curve-Point Conversion
-        self.Q_C = EllipticCurvePublicNumbers.from_encoded_point(self.curve, Q_C_bytes)
+        self.Q_C = ec.EllipticCurvePublicNumbers.from_encoded_point(self.curve, Q_C_bytes)
         K_S = self.transport.get_server_key().asbytes()
         K = self.P.exchange(ec.ECDH(), self.Q_C.public_key(default_backend()))
+        K = long(K.encode('hex'), 16)
         #compute exchange hash
         hm = Message()
         hm.add(self.transport.remote_version, self.transport.local_version,
                self.transport.remote_kex_init, self.transport.local_kex_init)
         hm.add_string(K_S)
-        hm.add_string(self.Q_C_bytes)
+        hm.add_string(Q_C_bytes)
         #SEC1: V2.0  2.3.3 Elliptic-Curve-Point-to-Octet-String Conversion
         hm.add_string(self.Q_S.public_numbers().encode_point())
-        hm.add_mpint(int(K))
+        hm.add_mpint(long(K))
         H = self.hash_algo(hm.asbytes()).digest()
         self.transport._set_K_H(K, H)
         sig = self.transport.get_server_key().sign_ssh_data(H)
         #construct reply
         m = Message()
-        m.add_byte(_MSG_KEXECDH_REPLY)
+        m.add_byte(c_MSG_KEXECDH_REPLY)
         m.add_string(K_S)
-        #SEC1: V2.0  2.3.3 Elliptic-Curve-Point-to-Octet-String Conversion
         m.add_string(self.Q_S.public_numbers().encode_point())
         m.add_string(sig)
         self.transport._send_message(m)
-        self.transport._activate_inbound()
+        self.transport._activate_outbound()
 
     def _parse_kexecdh_reply(self, m):
         K_S = m.get_string()
         Q_S_bytes = m.get_string()
-        #SEC1: V2.0  2.3.4 Octet-String-to-Elliptic-Curve-Point Conversion
-        self.Q_S = EllipticCurvePublicNumbers.from_encoded_point(self.curve, Q_S_bytes)
-        sig = m.get_string()
+        self.Q_S = ec.EllipticCurvePublicNumbers.from_encoded_point(self.curve, Q_S_bytes)
+        sig = m.get_binary()
         K = self.P.exchange(ec.ECDH(), self.Q_S.public_key(default_backend()))
-        K = int(K.encode('hex'), 16)
+        K = long(K.encode('hex'), 16)
         #compute exchange hash and verify signature
         hm = Message()
         hm.add(self.transport.local_version, self.transport.remote_version,

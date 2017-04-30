@@ -133,7 +133,7 @@ class Transport (threading.Thread, ClosingContextManager):
         'diffie-hellman-group-exchange-sha256',
         'ecdh-sha2-nistp256',
         'ecdh-sha2-nistp384',
-        'ecdh-sha2-nistp521'
+        'ecdh-sha2-nistp521',
     )
     _preferred_compression = ('none',)
 
